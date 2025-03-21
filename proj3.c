@@ -15,7 +15,7 @@ void handleExceptions(int argc, FILE * fptr1, FILE * fptr2, FILE * fptw1, FILE *
 // Step 1
 void step1(FILE * fptr1, FILE * fptr2, FILE *fptw1);
 // Step 2
-void step2(FILE * fptr1, FILE * fptr2, FILE * fptw2);
+void step2(FILE * fptr1, FILE * fptr2, FILE * fptw2, char * file1, char * file2);
 
 /*
  * This program will read files and compare them and write any differences in another files.
@@ -33,7 +33,7 @@ int main(int argc, char * * argv) {
     double milliseconds;
     // start the timer for step1
     gettimeofday(&start, NULL);
-    // step 1
+    //step 1
     step1(fptr1, fptr2, fptw1);
     // end the timer for step1
     gettimeofday(&end, NULL);
@@ -44,10 +44,13 @@ int main(int argc, char * * argv) {
     // print the time
     printf("Step 1 took %fl milliseconds\n", milliseconds);
 
+    // reset file pointers
+    fptr1 = fopen(* (argv + 1), "r");
+    fptr2 = fopen(* (argv + 2), "r");
     // start the timer for step2
     gettimeofday(&start, NULL);
     // step 2
-    step2(fptr1, fptr2, fptw2);
+    step2(fptr1, fptr2, fptw2, * (argv + 1), * (argv + 2));
     // end the timer for step2
     gettimeofday(&end, NULL);
     // calculate time for step 2
@@ -92,21 +95,25 @@ void step1(FILE * fptr1, FILE * fptr2, FILE * fptw1) {
 
 } // step1
 
-void step2(FILE * fptr1, FILE * fptr2, FILE * fptw2) {
+void step2(FILE * fptr1, FILE * fptr2, FILE * fptw2, char * file1, char * file2) {
     // get the size of file 1 and get memories for the file
-    fseek(fptr1, 0, SEEK_END);
-    long fileSize1 = ftell(fptr1);
+    struct stat fileStat;
+    if (stat(file1, &fileStat) == -1) {
+        printf("Cannot get file1 information!\n");
+        return;
+    } // if
+    long fileSize1 = fileStat.st_size;
     char * buffer1 = (char *) malloc(fileSize1 + 1);
-    rewind(fptr1);
     // read file 1
     fread(buffer1, 1, fileSize1, fptr1);
     * (buffer1 + fileSize1) = '\0';
-
     // get the size of file 2 and get memories for it
-    fseek(fptr2, 0, SEEK_END);
-    long fileSize2 = ftell(fptr2);
+    if (stat(file2, &fileStat) == -1) {
+        printf("Cannot get file2 information!\n");
+        return;
+    } // if
+    long fileSize2 = fileStat.st_size;
     char * buffer2 = (char *) malloc(fileSize2 + 1);
-    rewind(fptr2);
     // read file 2
     fread(buffer2, 1, fileSize2, fptr2);
     * (buffer2 + fileSize2) = '\0';
